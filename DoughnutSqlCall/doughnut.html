@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Doughnut Chart</title>
+    <script src="scripts/Chart.bundle.js"></script>
+    <script src="scripts/utils.js"></script>
+	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+    <style>
+    canvas {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+    </style>
+</head>
+
+<body>
+	<p class="text">Replace me!!</p>
+    <div id="canvas-holder" style="width:40%">
+        <canvas id="chart-area" />
+    </div>
+	
+	<br/><br/>
+	
+    <button id="randomizeData">Randomize Data</button>
+    <button id="addDataset">Add Dataset</button>
+    <button id="removeDataset">Remove Dataset</button>
+    <button id="addData">Add Data</button>
+    <button id="removeData">Remove Data</button>
+    <script>
+    var randomScalingFactor = function() {
+		//console.log(response.Scheduled);
+        return Math.round(Math.random() * 100);
+    };
+	
+	var completed;
+	
+	$( document ).ready(function() {
+	console.log('test');
+		$.ajax({
+		type:"GET",
+		url:"http://localhost:8080/api/status",
+		contentType:"application/json; charset=utf-8",
+		dataType:"json",
+		success: function(data) {
+		console.log(JSON.stringify(data[0].Completed));
+		  $('.text').text(JSON.stringify(data[0].Completed));
+		}
+	  });
+	});
+	
+	
+
+    var config = {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [
+                    randomScalingFactor(),
+                    randomScalingFactor(),
+                    randomScalingFactor(),
+                    randomScalingFactor()
+                ],
+                backgroundColor: [
+                    window.chartColors.red,
+                    window.chartColors.orange,
+                    window.chartColors.yellow,
+                    window.chartColors.green
+                ],
+                label: 'Dataset 1'
+            }],
+            labels: [
+                "Red",
+                "Orange",
+                "Yellow",
+                "Green"
+            ]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Chart.js Doughnut Chart'
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    };
+
+    window.onload = function() {
+        var ctx = document.getElementById("chart-area").getContext("2d");
+        window.myDoughnut = new Chart(ctx, config);
+    };
+
+    document.getElementById('randomizeData').addEventListener('click', function() {
+        config.data.datasets.forEach(function(dataset) {
+            dataset.data = dataset.data.map(function() {
+                return randomScalingFactor();
+            });
+        });
+
+        window.myDoughnut.update();
+    });
+
+    var colorNames = Object.keys(window.chartColors);
+    document.getElementById('addDataset').addEventListener('click', function() {
+        var newDataset = {
+            backgroundColor: [],
+            data: [],
+            label: 'New dataset ' + config.data.datasets.length,
+        };
+
+        for (var index = 0; index < config.data.labels.length; ++index) {
+            newDataset.data.push(randomScalingFactor());
+
+            var colorName = colorNames[index % colorNames.length];;
+            var newColor = window.chartColors[colorName];
+            newDataset.backgroundColor.push(newColor);
+        }
+
+        config.data.datasets.push(newDataset);
+        window.myDoughnut.update();
+    });
+
+    document.getElementById('addData').addEventListener('click', function() {
+        if (config.data.datasets.length > 0) {
+            config.data.labels.push('data #' + config.data.labels.length);
+
+            var colorName = colorNames[config.data.datasets[0].data.length % colorNames.length];;
+            var newColor = window.chartColors[colorName];
+
+            config.data.datasets.forEach(function(dataset) {
+                dataset.data.push(randomScalingFactor());
+                dataset.backgroundColor.push(newColor);
+            });
+
+            window.myDoughnut.update();
+        }
+    });
+
+    document.getElementById('removeDataset').addEventListener('click', function() {
+        config.data.datasets.splice(0, 1);
+        window.myDoughnut.update();
+    });
+
+    document.getElementById('removeData').addEventListener('click', function() {
+        config.data.labels.splice(-1, 1); // remove the label first
+
+        config.data.datasets.forEach(function(dataset) {
+            dataset.data.pop();
+            dataset.backgroundColor.pop();
+        });
+
+        window.myDoughnut.update();
+    });
+    </script>
+
+</body>
+
+</html>
